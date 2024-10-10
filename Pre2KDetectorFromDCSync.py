@@ -2,8 +2,9 @@ import argparse
 import hashlib
 
 class Pre2KAccountFinder:
-    def __init__(self, file_path):
+    def __init__(self, file_path, output_file):
         self.file_path = file_path
+        self.output_file = output_file
         self.machine_accounts = []
 
     def generate_credentials(self, account_name):
@@ -48,24 +49,35 @@ class Pre2KAccountFinder:
         if not self.machine_accounts:
             print("No machine accounts found.")
             return
-
+        
+        results = []  # Store results for output
+        
         for account_name, stored_nt_hash in self.machine_accounts:
             # Generate the potential password for comparison
             potential_password = account_name[:-1].lower()  # Assume password is the account name without '$' in lowercase
             computed_nt_hash = self.get_nt_hash(potential_password)
 
             if computed_nt_hash == stored_nt_hash.upper():
-                print(f"Found Pre2k account: {account_name} with hash: {stored_nt_hash} matches potential password: {potential_password}")
+                result = f"Found Pre2k account: {account_name} with hash: {stored_nt_hash} matches potential password: {potential_password}"
+                print(result)
+                results.append(result)
+
+        # Write results to output file if specified
+        if self.output_file:
+            with open(self.output_file, 'w') as out_file:
+                out_file.write("\n".join(results))
+            print(f"\nResults saved to {self.output_file}")
 
 def main():
     # Set up command line argument parsing
     parser = argparse.ArgumentParser(description='Find Pre-Windows 2000 accounts from secretsdump output.')
     parser.add_argument('-f', '--file', required=True, help='Path to the secretsdump output file')
-    
+    parser.add_argument('-o', '--output', help='Path to the output file for results')
+
     args = parser.parse_args()
     
     # Instantiate the Pre2KAccountFinder class and find accounts
-    finder = Pre2KAccountFinder(args.file)
+    finder = Pre2KAccountFinder(args.file, args.output)
     finder.find_pre2k_accounts()
 
 if __name__ == '__main__':
