@@ -47,7 +47,8 @@ class Pre2KAccountFinder:
         
         for account_name, stored_nt_hash in self.machine_accounts:
             # Generate the potential password for comparison
-            potential_password = account_name[:-1].lower()  # Assume password is the account name without '$' in lowercase
+            trimmed_account_name = account_name[:14]  # Only take the first 14 characters
+            potential_password = trimmed_account_name.rstrip('$').lower()  # Remove '$' and convert to lowercase
             computed_nt_hash = self.get_nt_hash(potential_password)
 
             if computed_nt_hash == stored_nt_hash.upper():
